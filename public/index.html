@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e1020" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DateNight" />
+  <meta name="description" content="A private place for two people to plan date nights and keep the spark alive." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>DateNight</title>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="app-header">
+    <div class="brand-lockup">
+      <span class="brand-moon" aria-hidden="true">☾</span>
+      <div>
+        <h1>DateNight</h1>
+        <p>our time, on purpose</p>
+      </div>
+    </div>
+    <button class="icon-button" id="settings-button" type="button" aria-label="Open settings" hidden>⚙</button>
+  </header>
+
+  <main class="container">
+    <section class="setup-card" id="configuration-panel" hidden>
+      <span class="section-kicker">One last step</span>
+      <h2>Connect DateNight</h2>
+      <p>The app is ready, but Firebase still needs to be connected before both phones can share plans and notifications.</p>
+      <p class="helper">Follow <strong>SETUP.md</strong> in the DateNight folder, then redeploy the folder to Netlify.</p>
+    </section>
+
+    <section class="setup-card" id="join-panel" hidden>
+      <span class="section-kicker">Private space for two</span>
+      <h2 id="join-heading">Let’s find each other</h2>
+      <p>Create your shared space on the first phone. On the second phone, join with the private code.</p>
+
+      <label class="field">
+        <span>Your name</span>
+        <input id="display-name" maxlength="24" autocomplete="name" placeholder="Your name" />
+      </label>
+
+      <div class="setup-actions">
+        <button class="button primary" id="create-space-button" type="button">Create our space</button>
+        <div class="or-divider"><span>or</span></div>
+        <label class="field">
+          <span>Couple code</span>
+          <input id="couple-code-input" class="code-input" maxlength="10" autocomplete="one-time-code" placeholder="e.g. MOON7KISS" />
+        </label>
+        <button class="button secondary" id="join-space-button" type="button">Join my partner</button>
+      </div>
+    </section>
+
+    <div id="app-content" hidden>
+      <section class="connection-strip" aria-label="Shared-space status">
+        <div>
+          <span class="live-dot"></span>
+          <span id="connection-label">Connected</span>
+        </div>
+        <button class="text-button" id="show-code-button" type="button">Show couple code</button>
+      </section>
+
+      <section class="hero-card" id="next-date-card">
+        <div class="hero-topline">
+          <span class="section-kicker">Next date night</span>
+          <span class="letter-badge" id="next-letter" hidden>A</span>
+        </div>
+        <div id="next-date-empty" class="empty-state">
+          <span class="empty-icon">☾</span>
+          <h2>Nothing booked yet</h2>
+          <p>Choose a day and let one letter inspire the whole evening.</p>
+          <button class="button primary" id="book-first-button" type="button">Book a date night</button>
+        </div>
+        <div id="next-date-details" hidden>
+          <div class="countdown">
+            <strong id="countdown-number">0</strong>
+            <span id="countdown-label">days to go</span>
+          </div>
+          <h2 id="next-date-title">Saturday evening</h2>
+          <p class="date-line" id="next-date-line"></p>
+          <div class="plan-grid">
+            <article>
+              <span>🍽 Dinner</span>
+              <p id="next-dinner"></p>
+            </article>
+            <article>
+              <span>✦ Activity</span>
+              <p id="next-activity"></p>
+            </article>
+            <article>
+              <span>♡ Bedroom</span>
+              <p id="next-bedroom"></p>
+            </article>
+          </div>
+          <div class="button-row">
+            <button class="button secondary" id="edit-next-button" type="button">Edit plan</button>
+            <button class="button ghost danger-text" id="delete-next-button" type="button">Cancel date</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="spark-card">
+        <div>
+          <span class="section-kicker">A little spark</span>
+          <h2>Nooky tonight?</h2>
+          <p>Send your partner a private nudge for tonight.</p>
+        </div>
+        <button class="nooky-button" id="nooky-button" type="button">
+          <span>♡</span>
+          Ask my partner
+        </button>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Make a plan</span>
+            <h2 id="booking-heading">Book a date night</h2>
+          </div>
+          <button class="text-button" id="cancel-edit-button" type="button" hidden>Cancel edit</button>
+        </div>
+
+        <form id="booking-form">
+          <div class="form-row">
+            <label class="field">
+              <span>Date</span>
+              <input id="date-input" type="date" required />
+            </label>
+            <label class="field">
+              <span>Time</span>
+              <input id="time-input" type="time" value="19:00" required />
+            </label>
+          </div>
+
+          <fieldset class="letter-picker">
+            <legend>Choose tonight’s letter</legend>
+            <div class="alphabet" id="alphabet" aria-label="Alphabet theme"></div>
+          </fieldset>
+
+          <div class="theme-fields">
+            <label class="field icon-field">
+              <span><b>🍽</b> Dinner idea</span>
+              <textarea id="dinner-input" maxlength="180" placeholder="Something beginning with the chosen letter…" required></textarea>
+            </label>
+            <label class="field icon-field">
+              <span><b>✦</b> Activity idea</span>
+              <textarea id="activity-input" maxlength="180" placeholder="What shall we do together?" required></textarea>
+            </label>
+            <label class="field icon-field">
+              <span><b>♡</b> Bedroom idea</span>
+              <textarea id="bedroom-input" maxlength="180" placeholder="A private idea for later…" required></textarea>
+            </label>
+          </div>
+
+          <button class="button primary full" id="save-date-button" type="submit">Book our date night</button>
+        </form>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Us lately</span>
+            <h2>Our date history</h2>
+          </div>
+          <div class="average-chip">
+            <strong id="average-days">—</strong>
+            <span>avg days apart</span>
+          </div>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty">Your past date nights will appear here.</div>
+        </div>
+      </section>
+
+      <section class="notification-card" id="notification-card">
+        <div class="notification-icon">♢</div>
+        <div>
+          <h2>Don’t miss the moment</h2>
+          <p id="notification-copy">Enable notifications for date-day reminders and partner nudges.</p>
+        </div>
+        <button class="button secondary" id="notification-button" type="button">Enable</button>
+      </section>
+
+      <section class="install-card" id="install-card" hidden>
+        <div>
+          <span class="section-kicker">Keep us close</span>
+          <h2>Install DateNight</h2>
+          <p>Add it to your phone so reminders and plans are always one tap away.</p>
+        </div>
+        <button class="button primary" id="install-button" type="button">Install app</button>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="code-dialog">
+    <button class="dialog-close" type="button" data-close-dialog aria-label="Close">×</button>
+    <span class="section-kicker">Your private couple code</span>
+    <h2 id="couple-code-display">—</h2>
+    <p>Open DateNight on your partner’s phone and enter this code. Only share it with your partner.</p>
+    <button class="button secondary full" id="copy-code-button" type="button">Copy code</button>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <button class="dialog-close" type="button" data-close-dialog aria-label="Close">×</button>
+    <span class="section-kicker">This phone</span>
+    <h2>Settings</h2>
+    <label class="field">
+      <span>Your display name</span>
+      <input id="settings-name" maxlength="24" />
+    </label>
+    <button class="button primary full" id="save-settings-button" type="button">Save name</button>
+    <hr />
+    <p class="helper">Leaving removes this phone from the shared space. Your existing plans remain with your partner.</p>
+    <button class="button ghost full danger-text" id="leave-space-button" type="button">Leave this shared space</button>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/firebase-config.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
