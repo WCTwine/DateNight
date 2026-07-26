@@ -51,6 +51,7 @@ const state = {
   displayName: localStorage.getItem(localKeys.displayName) || "",
   couple: null,
   dates: [],
+  messages: [],
   selectedLetter: "A",
   editingId: null,
   installPrompt: null,
@@ -144,6 +145,7 @@ function clearMembership() {
   state.coupleCode = null;
   state.couple = null;
   state.dates = [];
+  state.messages = [];
   localStorage.removeItem(localKeys.coupleId);
   localStorage.removeItem(localKeys.coupleCode);
   state.unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -270,6 +272,40 @@ function renderHistory() {
 function renderDates() {
   renderNextDate();
   renderHistory();
+}
+
+function renderNookyMessages() {
+  const panel = document.getElementById("nooky-response");
+  const copy = document.getElementById("nooky-response-copy");
+  const buttons = document.getElementById("nooky-response-buttons");
+  const latest = state.messages[0];
+
+  if (!latest || !state.user) {
+    panel.hidden = true;
+    return;
+  }
+
+  const sentByMe = latest.senderUid === state.user.uid;
+  panel.hidden = false;
+
+  if (!sentByMe && latest.status !== "responded") {
+    copy.textContent = `${latest.senderName || partnerName()} asks: “Nooky tonight?”`;
+    buttons.hidden = false;
+    buttons.dataset.messageId = latest.id;
+    return;
+  }
+
+  buttons.hidden = true;
+  buttons.dataset.messageId = "";
+  if (sentByMe && latest.status === "responded") {
+    copy.textContent = `${latest.responderName || partnerName()} replied: ${
+      latest.response === "ok" ? "OK" : "Not tonight"
+    }`;
+  } else if (sentByMe) {
+    copy.textContent = `Waiting for ${partnerName()} to reply…`;
+  } else {
+    copy.textContent = `You replied: ${latest.response === "ok" ? "OK" : "Not tonight"}`;
+  }
 }
 
 function resetBookingForm() {
@@ -443,6 +479,18 @@ async function enterCouple() {
     showToast("Could not refresh your plans");
   }));
 
+  const messageQuery = query(
+    collection(db, "couples", state.coupleId, "messages"),
+    orderBy("createdAt", "desc")
+  );
+  state.unsubscribers.push(onSnapshot(messageQuery, querySnapshot => {
+    state.messages = querySnapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+    renderNookyMessages();
+  }, error => {
+    console.error(error);
+    showToast("Could not refresh your messages");
+  }));
+
   await updateNotificationState();
 }
 
@@ -534,6 +582,36 @@ async function sendNookyMessage() {
   } catch (error) {
     console.error(error);
     showToast("Could not send the message");
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function respondToNooky(responseValue, button) {
+  const messageId = document.getElementById("nooky-response-buttons").dataset.messageId;
+  if (!messageId || !state.coupleId || !state.user) return;
+
+  setBusy(button, true, "Sending…");
+  try {
+    const token = await state.user.getIdToken();
+    const response = await fetch("/api/nooky-response", {
+      method: "POST",
+      headers: {
+        "authorization": `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        coupleId: state.coupleId,
+        messageId,
+        response: responseValue
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not send.");
+    showToast(responseValue === "ok" ? "Replied OK ♡" : "Replied Not tonight");
+  } catch (error) {
+    console.error(error);
+    showToast("Could not send your reply");
   } finally {
     setBusy(button, false);
   }
@@ -647,6 +725,11 @@ function wireInterface() {
   document.getElementById("join-space-button").addEventListener("click", () => joinCouple(false));
   bookingForm.addEventListener("submit", saveDateNight);
   document.getElementById("nooky-button").addEventListener("click", sendNookyMessage);
+  document.querySelectorAll("[data-nooky-response]").forEach(button =>
+    button.addEventListener("click", () =>
+      respondToNooky(button.dataset.nookyResponse, button)
+    )
+  );
   document.getElementById("notification-button").addEventListener("click", enableNotifications);
   document.getElementById("cancel-edit-button").addEventListener("click", resetBookingForm);
   document.getElementById("book-first-button").addEventListener("click", () =>

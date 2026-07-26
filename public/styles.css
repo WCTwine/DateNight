@@ -201,11 +201,15 @@ p { color: var(--muted); line-height: 1.55; }
 .plan-grid article p { margin: 5px 0 0; color: var(--text); font-size: 13px; white-space: pre-wrap; }
 
 .spark-card {
+  display: grid;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(111, 48, 91, 0.88), rgba(54, 26, 64, 0.97));
+}
+.spark-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  background: linear-gradient(135deg, rgba(111, 48, 91, 0.88), rgba(54, 26, 64, 0.97));
 }
 .spark-card h2 { font-size: 24px; }
 .spark-card p { margin: 6px 0 0; font-size: 12px; }
@@ -225,6 +229,21 @@ p { color: var(--muted); line-height: 1.55; }
   font-weight: 600;
 }
 .nooky-button span { font-size: 24px; line-height: 1; }
+.nooky-response {
+  padding-top: 14px;
+  border-top: 1px solid rgba(232, 160, 208, 0.2);
+}
+.nooky-response p {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.nooky-response-buttons {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+}
+.nooky-response-buttons .button { flex: 1; }
 
 .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
 .average-chip { flex: 0 0 auto; min-width: 86px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 12px; text-align: center; background: var(--surface-2); }

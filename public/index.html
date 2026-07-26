@@ -109,18 +109,6 @@
         </div>
       </section>
 
-      <section class="spark-card">
-        <div>
-          <span class="section-kicker">A little spark</span>
-          <h2>Nooky tonight?</h2>
-          <p>Send your partner a private nudge for tonight.</p>
-        </div>
-        <button class="nooky-button" id="nooky-button" type="button">
-          <span>♡</span>
-          Ask my partner
-        </button>
-      </section>
-
       <section>
         <div class="section-heading">
           <div>
@@ -164,6 +152,27 @@
 
           <button class="button primary full" id="save-date-button" type="submit">Book our date night</button>
         </form>
+      </section>
+
+      <section class="spark-card">
+        <div class="spark-main">
+          <div>
+            <span class="section-kicker">A little spark</span>
+            <h2>Nooky tonight?</h2>
+            <p>Send your partner a private nudge for tonight.</p>
+          </div>
+          <button class="nooky-button" id="nooky-button" type="button">
+            <span>♡</span>
+            Ask my partner
+          </button>
+        </div>
+        <div class="nooky-response" id="nooky-response" hidden>
+          <p id="nooky-response-copy"></p>
+          <div class="nooky-response-buttons" id="nooky-response-buttons">
+            <button class="button primary" data-nooky-response="ok" type="button">OK</button>
+            <button class="button secondary" data-nooky-response="not-tonight" type="button">Not tonight</button>
+          </div>
+        </div>
       </section>
 
       <section>
