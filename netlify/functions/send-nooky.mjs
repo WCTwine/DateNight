@@ -40,16 +40,18 @@ export default async function handler(request) {
       coupleId
     });
 
-    await coupleRef.collection("messages").add({
+    const message = await coupleRef.collection("messages").add({
       type: "nooky",
       body: "Nooky tonight?",
       senderUid: user.uid,
       senderName,
       delivered: delivery.delivered,
+      status: "pending",
+      response: null,
       createdAt: timestamp()
     });
 
-    return jsonResponse(delivery);
+    return jsonResponse({ ...delivery, messageId: message.id });
   } catch (error) {
     console.error("send-nooky failed", error);
     const status = error.message === "Authentication required." ? 401 : 500;
