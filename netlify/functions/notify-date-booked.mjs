@@ -21,8 +21,8 @@ export default async function handler(request) {
 
   try {
     const user = await authenticatedUser(request);
-    const { coupleId, dateNightId } = await request.json();
-    if (!coupleId || !dateNightId) {
+    const { coupleId, dateNightId, action = "booked" } = await request.json();
+    if (!coupleId || !dateNightId || !["booked", "updated"].includes(action)) {
       return jsonResponse({ error: "A date night is required." }, 400);
     }
 
@@ -44,11 +44,12 @@ export default async function handler(request) {
 
     const dateNight = dateSnapshot.data();
     const senderName = couple.memberNames?.[user.uid] || "Your partner";
+    const actionText = action === "updated" ? "updated" : "booked";
     const devices = await memberDevices(coupleId, user.uid);
     const delivery = await sendDataNotification(devices, {
       title: "DateNight ♡",
-      body: `${senderName} booked our date night for ${friendlyDate(dateNight.date)}`,
-      tag: `datenight-booked-${dateNightId}`,
+      body: `${senderName} ${actionText} our date night for ${friendlyDate(dateNight.date)}`,
+      tag: `datenight-${actionText}-${dateNightId}`,
       url: "/",
       coupleId
     });
