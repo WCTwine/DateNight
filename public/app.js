@@ -29,6 +29,7 @@ import {
 
 const config = globalThis.DATE_NIGHT_FIREBASE;
 const configurationPanel = document.getElementById("configuration-panel");
+const lockPanel = document.getElementById("lock-panel");
 const joinPanel = document.getElementById("join-panel");
 const appContent = document.getElementById("app-content");
 const settingsButton = document.getElementById("settings-button");
@@ -59,6 +60,52 @@ const state = {
   messaging: null,
   serviceWorkerRegistration: null
 };
+
+async function accessStatus() {
+  const response = await fetch("/api/access", {
+    headers: { "accept": "application/json" },
+    cache: "no-store"
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Password protection is unavailable.");
+  return Boolean(data.unlocked);
+}
+
+async function unlockDateNight(event) {
+  event.preventDefault();
+  const button = document.getElementById("unlock-button");
+  const input = document.getElementById("password-input");
+  setBusy(button, true, "Checking…");
+
+  try {
+    const response = await fetch("/api/access", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "accept": "application/json"
+      },
+      body: JSON.stringify({ password: input.value })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "That password is not correct.");
+    input.value = "";
+    lockPanel.hidden = true;
+    await startFirebase();
+  } catch (error) {
+    document.getElementById("lock-copy").textContent = error.message;
+    input.select();
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function lockDateNight() {
+  try {
+    await fetch("/api/access", { method: "DELETE" });
+  } finally {
+    window.location.reload();
+  }
+}
 
 function isConfigured() {
   const firebaseValues = Object.values(config?.firebaseConfig || {});
@@ -744,6 +791,7 @@ function wireInterface() {
   renderAlphabet();
   resetBookingForm();
 
+  document.getElementById("unlock-form").addEventListener("submit", unlockDateNight);
   document.getElementById("create-space-button").addEventListener("click", createCouple);
   document.getElementById("join-space-button").addEventListener("click", () => joinCouple(false));
   bookingForm.addEventListener("submit", saveDateNight);
@@ -771,6 +819,7 @@ function wireInterface() {
   });
   settingsButton.addEventListener("click", () => settingsDialog.showModal());
   document.getElementById("save-settings-button").addEventListener("click", saveSettings);
+  document.getElementById("lock-app-button").addEventListener("click", lockDateNight);
   document.getElementById("leave-space-button").addEventListener("click", leaveSpace);
   document.querySelectorAll("[data-close-dialog]").forEach(button =>
     button.addEventListener("click", () => button.closest("dialog").close())
@@ -813,11 +862,11 @@ function wireInterface() {
 let firebaseApp;
 let auth;
 let db;
+let firebaseStarted = false;
 
-async function start() {
-  wireInterface();
-  state.serviceWorkerRegistration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-
+async function startFirebase() {
+  if (firebaseStarted) return;
+  firebaseStarted = true;
   if (!isConfigured()) {
     configurationPanel.hidden = false;
     return;
@@ -841,6 +890,19 @@ async function start() {
     onMessage(state.messaging, payload => {
       showToast(payload.notification?.body || payload.data?.body || "A message from your partner ♡");
     });
+  }
+}
+
+async function start() {
+  wireInterface();
+  state.serviceWorkerRegistration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  try {
+    if (await accessStatus()) {
+      lockPanel.hidden = true;
+      await startFirebase();
+    }
+  } catch (error) {
+    document.getElementById("lock-copy").textContent = error.message;
   }
 }
 

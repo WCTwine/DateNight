@@ -131,6 +131,17 @@ p { color: var(--muted); line-height: 1.55; }
 .setup-card { padding: 30px 24px; }
 .setup-card > p { margin: 12px 0 24px; font-size: 14px; }
 .setup-actions { display: grid; gap: 14px; }
+.lock-card { position: relative; overflow: hidden; padding-top: 38px; }
+.lock-card > * { position: relative; z-index: 1; }
+.lock-moon {
+  position: absolute;
+  z-index: 0;
+  right: -18px;
+  top: -38px;
+  color: rgba(232, 160, 208, 0.07);
+  font: 190px/1 Georgia, serif;
+  pointer-events: none;
+}
 .or-divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; }
 .or-divider::before, .or-divider::after { content: ""; height: 1px; flex: 1; background: var(--border); }
 

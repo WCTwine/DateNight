@@ -33,6 +33,20 @@
   </header>
 
   <main class="container">
+    <section class="setup-card lock-card" id="lock-panel">
+      <span class="lock-moon" aria-hidden="true">☾</span>
+      <span class="section-kicker">Just for us</span>
+      <h2>Unlock DateNight</h2>
+      <p id="lock-copy">Enter your shared password to open your private space.</p>
+      <form id="unlock-form" class="setup-actions">
+        <label class="field">
+          <span>Shared password</span>
+          <input id="password-input" type="password" autocomplete="current-password" required />
+        </label>
+        <button class="button primary full" id="unlock-button" type="submit">Unlock</button>
+      </form>
+    </section>
+
     <section class="setup-card" id="configuration-panel" hidden>
       <span class="section-kicker">One last step</span>
       <h2>Connect DateNight</h2>
@@ -228,6 +242,8 @@
       <input id="settings-name" maxlength="24" />
     </label>
     <button class="button primary full" id="save-settings-button" type="button">Save name</button>
+    <hr />
+    <button class="button secondary full" id="lock-app-button" type="button">Lock DateNight</button>
     <hr />
     <p class="helper">Leaving removes this phone from the shared space. Your existing plans remain with your partner.</p>
     <button class="button ghost full danger-text" id="leave-space-button" type="button">Leave this shared space</button>

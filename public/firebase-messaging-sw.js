@@ -2,7 +2,7 @@ importScripts("/firebase-config.js");
 importScripts("https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js");
 
-const CACHE_NAME = "datenight-v3";
+const CACHE_NAME = "datenight-v4";
 const APP_ASSETS = [
   "/",
   "/index.html",
@@ -54,7 +54,13 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
+  const url = new URL(event.request.url);
+  if (
+    event.request.method !== "GET" ||
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/.netlify/functions/")
+  ) return;
   event.respondWith(
     fetch(event.request)
       .then(response => {
