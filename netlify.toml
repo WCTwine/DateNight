@@ -18,6 +18,11 @@
   to = "/.netlify/functions/respond-nooky"
   status = 200
 
+[[redirects]]
+  from = "/api/date-booked"
+  to = "/.netlify/functions/notify-date-booked"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
