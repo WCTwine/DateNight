@@ -564,12 +564,10 @@ async function saveDateNight(event) {
         : null
     }, { merge: true });
 
-    if (!wasEditing) {
-      try {
-        await notifyDateBooked(dateNightRef.id);
-      } catch (error) {
-        console.warn(error);
-      }
+    try {
+      await notifyDateSaved(dateNightRef.id, wasEditing ? "updated" : "booked");
+    } catch (error) {
+      console.warn(error);
     }
     resetBookingForm();
     showToast(wasEditing ? "Date night updated" : "Date night booked");
@@ -582,7 +580,7 @@ async function saveDateNight(event) {
   }
 }
 
-async function notifyDateBooked(dateNightId) {
+async function notifyDateSaved(dateNightId, action) {
   const token = await state.user.getIdToken();
   const response = await fetch("/api/date-booked", {
     method: "POST",
@@ -590,7 +588,7 @@ async function notifyDateBooked(dateNightId) {
       "authorization": `Bearer ${token}`,
       "content-type": "application/json"
     },
-    body: JSON.stringify({ coupleId: state.coupleId, dateNightId })
+    body: JSON.stringify({ coupleId: state.coupleId, dateNightId, action })
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
