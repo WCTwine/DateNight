@@ -13,6 +13,11 @@
   to = "/.netlify/functions/send-nooky"
   status = 200
 
+[[redirects]]
+  from = "/api/nooky-response"
+  to = "/.netlify/functions/respond-nooky"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
