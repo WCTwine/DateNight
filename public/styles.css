@@ -252,6 +252,7 @@ p { color: var(--muted); line-height: 1.55; }
 
 .field { display: grid; gap: 7px; }
 .field > span, fieldset legend { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+.field > span em { font-style: normal; font-weight: 500; opacity: 0.76; }
 input, textarea {
   width: 100%;
   border: 1px solid var(--border);

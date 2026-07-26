@@ -531,6 +531,13 @@ async function saveDateNight(event) {
         : null
     }, { merge: true });
 
+    if (!wasEditing) {
+      try {
+        await notifyDateBooked(dateNightRef.id);
+      } catch (error) {
+        console.warn(error);
+      }
+    }
     resetBookingForm();
     showToast(wasEditing ? "Date night updated" : "Date night booked");
     document.getElementById("next-date-card").scrollIntoView({ behavior: "smooth" });
@@ -539,6 +546,22 @@ async function saveDateNight(event) {
     showToast("Could not save the date night");
   } finally {
     setBusy(button, false);
+  }
+}
+
+async function notifyDateBooked(dateNightId) {
+  const token = await state.user.getIdToken();
+  const response = await fetch("/api/date-booked", {
+    method: "POST",
+    headers: {
+      "authorization": `Bearer ${token}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({ coupleId: state.coupleId, dateNightId })
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Could not send the booking notification.");
   }
 }
 
