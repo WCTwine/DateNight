@@ -61,16 +61,6 @@ const state = {
   serviceWorkerRegistration: null
 };
 
-async function accessStatus() {
-  const response = await fetch("/api/access", {
-    headers: { "accept": "application/json" },
-    cache: "no-store"
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Password protection is unavailable.");
-  return Boolean(data.unlocked);
-}
-
 async function unlockDateNight(event) {
   event.preventDefault();
   const button = document.getElementById("unlock-button");
@@ -99,12 +89,8 @@ async function unlockDateNight(event) {
   }
 }
 
-async function lockDateNight() {
-  try {
-    await fetch("/api/access", { method: "DELETE" });
-  } finally {
-    window.location.reload();
-  }
+function lockDateNight() {
+  window.location.reload();
 }
 
 function isConfigured() {
@@ -857,6 +843,9 @@ function wireInterface() {
     document.getElementById("install-card").hidden = true;
     showToast("DateNight installed ♡");
   });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && firebaseStarted) window.location.reload();
+  });
 }
 
 let firebaseApp;
@@ -896,14 +885,6 @@ async function startFirebase() {
 async function start() {
   wireInterface();
   state.serviceWorkerRegistration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-  try {
-    if (await accessStatus()) {
-      lockPanel.hidden = true;
-      await startFirebase();
-    }
-  } catch (error) {
-    document.getElementById("lock-copy").textContent = error.message;
-  }
 }
 
 start().catch(error => {
