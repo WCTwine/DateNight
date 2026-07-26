@@ -23,6 +23,11 @@
   to = "/.netlify/functions/notify-date-booked"
   status = 200
 
+[[redirects]]
+  from = "/api/access"
+  to = "/.netlify/functions/access"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
