@@ -21,6 +21,7 @@ import {
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
+  deleteToken,
   getMessaging,
   getToken,
   isSupported,
@@ -564,13 +565,21 @@ async function saveDateNight(event) {
         : null
     }, { merge: true });
 
+    let saveMessage = wasEditing ? "Date night updated" : "Date night booked";
     try {
-      await notifyDateSaved(dateNightRef.id, wasEditing ? "updated" : "booked");
+      const delivery = await notifyDateSaved(
+        dateNightRef.id,
+        wasEditing ? "updated" : "booked"
+      );
+      if (!delivery.delivered) {
+        saveMessage += ", but your partner’s notification was not delivered";
+      }
     } catch (error) {
       console.warn(error);
+      saveMessage += ", but the notification could not be sent";
     }
     resetBookingForm();
-    showToast(wasEditing ? "Date night updated" : "Date night booked");
+    showToast(saveMessage);
     document.getElementById("next-date-card").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
     console.error(error);
@@ -594,6 +603,7 @@ async function notifyDateSaved(dateNightId, action) {
     const data = await response.json().catch(() => ({}));
     throw new Error(data.error || "Could not send the booking notification.");
   }
+  return response.json();
 }
 
 async function deleteDateNight(id) {
@@ -682,29 +692,46 @@ async function updateNotificationState() {
     return;
   }
   if (Notification.permission === "granted") {
-    card.classList.add("enabled");
-    copy.textContent = "Notifications are enabled on this phone.";
-    button.textContent = "Enabled";
-    button.disabled = true;
-    await registerPushToken();
+    try {
+      await registerPushToken();
+      card.classList.add("enabled");
+      copy.textContent = "Notifications are connected on this phone.";
+      button.textContent = "Refresh";
+      button.disabled = false;
+    } catch (error) {
+      console.error(error);
+      card.classList.remove("enabled");
+      copy.textContent = "Permission is allowed, but notifications need reconnecting.";
+      button.textContent = "Repair";
+      button.disabled = false;
+    }
   } else if (Notification.permission === "denied") {
+    card.classList.remove("enabled");
     copy.textContent = "Notifications are blocked. Allow them in Chrome’s site settings.";
     button.textContent = "Blocked";
     button.disabled = true;
+  } else {
+    card.classList.remove("enabled");
+    copy.textContent = "Enable notifications for date-day reminders and partner nudges.";
+    button.textContent = "Enable";
+    button.disabled = false;
   }
 }
 
 async function enableNotifications() {
   const button = document.getElementById("notification-button");
-  setBusy(button, true, "Enabling…");
+  const forceRefresh = Notification.permission === "granted";
+  setBusy(button, true, forceRefresh ? "Refreshing…" : "Enabling…");
   try {
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
       showToast("Notifications were not enabled");
       return;
     }
-    await registerPushToken();
-    showToast("Notifications enabled on this phone");
+    await registerPushToken({ forceRefresh });
+    showToast(forceRefresh
+      ? "Notifications refreshed on this phone"
+      : "Notifications enabled on this phone");
   } catch (error) {
     console.error(error);
     showToast("Could not enable notifications");
@@ -714,19 +741,32 @@ async function enableNotifications() {
   }
 }
 
-async function registerPushToken() {
-  if (!state.user || !state.coupleId || Notification.permission !== "granted") return;
-  if (!(await isSupported())) return;
+async function registerPushToken({ forceRefresh = false } = {}) {
+  if (!state.user || !state.coupleId || Notification.permission !== "granted") {
+    throw new Error("Notification registration is not ready.");
+  }
+  if (!(await isSupported())) {
+    throw new Error("Push notifications are not supported on this device.");
+  }
 
   state.serviceWorkerRegistration ||= await navigator.serviceWorker.ready;
   state.messaging ||= getMessaging(firebaseApp);
+  const deviceRef = doc(db, "couples", state.coupleId, "devices", state.user.uid);
+  const deviceSnapshot = await getDoc(deviceRef);
+
+  // If the server has removed an invalid token, delete the browser's cached
+  // token before requesting a replacement. The Refresh button also forces this.
+  if (forceRefresh || !deviceSnapshot.exists()) {
+    await deleteToken(state.messaging).catch(() => false);
+  }
+
   const token = await getToken(state.messaging, {
     vapidKey: config.vapidKey,
     serviceWorkerRegistration: state.serviceWorkerRegistration
   });
-  if (!token) return;
+  if (!token) throw new Error("Firebase did not return a notification token.");
 
-  await setDoc(doc(db, "couples", state.coupleId, "devices", state.user.uid), {
+  await setDoc(deviceRef, {
     uid: state.user.uid,
     token,
     displayName: state.displayName,
