@@ -752,11 +752,10 @@ async function registerPushToken({ forceRefresh = false } = {}) {
   state.serviceWorkerRegistration ||= await navigator.serviceWorker.ready;
   state.messaging ||= getMessaging(firebaseApp);
   const deviceRef = doc(db, "couples", state.coupleId, "devices", state.user.uid);
-  const deviceSnapshot = await getDoc(deviceRef);
 
-  // If the server has removed an invalid token, delete the browser's cached
-  // token before requesting a replacement. The Refresh button also forces this.
-  if (forceRefresh || !deviceSnapshot.exists()) {
+  // The Refresh button deletes the browser's cached token before requesting
+  // a replacement. Normal startup simply re-saves the current valid token.
+  if (forceRefresh) {
     await deleteToken(state.messaging).catch(() => false);
   }
 

@@ -2,7 +2,7 @@ importScripts("/firebase-config.js");
 importScripts("https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js");
 
-const CACHE_NAME = "datenight-v5";
+const CACHE_NAME = "datenight-v6";
 const APP_ASSETS = [
   "/",
   "/index.html",
